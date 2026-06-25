@@ -1,5 +1,3 @@
-const STORAGE_KEY = 'todo-app-tasks';
-
 const todayLabelEl = document.getElementById('today-label');
 const todayListEl = document.getElementById('today-list');
 const allListEl = document.getElementById('all-list');
@@ -31,7 +29,7 @@ const dayListDateLabelEl = document.getElementById('day-list-date-label');
 const dayTaskListEl = document.getElementById('day-task-list');
 const dayListEmptyEl = document.getElementById('day-list-empty');
 
-let tasks = loadTasks();
+let tasks = [];
 let detailTaskId = null;
 let detailIsEditing = false;
 let currentView = 'list';
@@ -39,17 +37,10 @@ let calendarYear = new Date().getFullYear();
 let calendarMonth = new Date().getMonth();
 let selectedDayDate = null;
 
-function loadTasks() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
 function saveTasks() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  // localStorage를 사용하지 않습니다.
+  // 현재 버전은 브라우저가 열려 있는 동안에만 할 일이 유지됩니다.
+  // 추후 실제 저장이 필요하면 서버, Google Sheets, DB 등으로 연결할 수 있습니다.
 }
 
 function getTodayString() {
