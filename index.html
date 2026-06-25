@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>할 일 관리</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-top">
+        <h1>할 일 관리</h1>
+        <button type="button" class="btn-primary btn-add" id="add-btn">+ 새로운 할 일 추가하기</button>
+      </div>
+      <p class="subtitle" id="today-label"></p>
+    </header>
+
+    <section class="section today-section">
+      <div class="section-header">
+        <h2>오늘의 할 일</h2>
+        <span class="badge" id="today-count">0</span>
+      </div>
+      <ul class="task-list" id="today-list"></ul>
+      <p class="empty-message" id="today-empty">오늘 예정된 할 일이 없습니다.</p>
+    </section>
+
+    <div class="view-toggle">
+      <button type="button" class="btn-view active" id="list-view-btn">목록으로 보기</button>
+      <button type="button" class="btn-view" id="calendar-view-btn">달력으로 보기</button>
+    </div>
+
+    <section class="section all-section" id="list-view-section">
+      <div class="section-header">
+        <h2>전체 할 일 목록</h2>
+        <span class="badge" id="all-count">0</span>
+      </div>
+      <ul class="task-list" id="all-list"></ul>
+      <p class="empty-message" id="all-empty">등록된 할 일이 없습니다. 위 버튼으로 추가해 보세요.</p>
+    </section>
+
+    <section class="section calendar-section hidden" id="calendar-view-section">
+      <div class="calendar-header">
+        <button type="button" class="calendar-nav-btn" id="prev-month" aria-label="이전 달">‹</button>
+        <h2 id="calendar-month-label"></h2>
+        <button type="button" class="calendar-nav-btn" id="next-month" aria-label="다음 달">›</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </section>
+  </div>
+
+  <div class="overlay hidden" id="day-list-overlay">
+    <div class="modal" role="dialog" aria-labelledby="day-list-title" aria-modal="true">
+      <h2 id="day-list-title">할 일 목록</h2>
+      <p class="day-list-date" id="day-list-date-label"></p>
+      <ul class="task-list day-task-list" id="day-task-list"></ul>
+      <p class="empty-message" id="day-list-empty">이 날짜에 등록된 할 일이 없습니다.</p>
+      <div class="form-actions day-list-actions">
+        <button type="button" class="btn-secondary" id="day-list-add-btn">+ 이 날짜에 할 일 추가하기</button>
+        <button type="button" class="btn-primary" id="day-list-close-btn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="detail-overlay">
+    <div class="modal" role="dialog" aria-labelledby="detail-modal-title" aria-modal="true">
+      <h2 id="detail-modal-title">할 일 상세</h2>
+      <div class="detail-form">
+        <div class="form-group">
+          <label for="detail-title">제목</label>
+          <input type="text" id="detail-title" class="readonly" readonly>
+        </div>
+        <div class="form-group">
+          <label for="detail-content">내용</label>
+          <textarea id="detail-content" class="readonly" rows="4" readonly></textarea>
+        </div>
+        <div class="form-group">
+          <label for="detail-date">일자</label>
+          <input type="date" id="detail-date" class="readonly" readonly>
+        </div>
+        <div class="form-actions detail-actions">
+          <button type="button" class="btn-secondary" id="detail-edit-btn">상세 정보 편집</button>
+          <button type="button" class="btn-secondary" id="detail-toggle-done-btn">완료하기</button>
+          <button type="button" class="btn-danger" id="detail-delete-btn">삭제</button>
+          <button type="button" class="btn-primary" id="detail-close-btn">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <h2 id="modal-title">새 할 일 추가</h2>
+      <form id="task-form">
+        <div class="form-group">
+          <label for="task-title">제목</label>
+          <input type="text" id="task-title" placeholder="할 일 제목을 입력하세요" required maxlength="100">
+        </div>
+        <div class="form-group">
+          <label for="task-content">내용</label>
+          <textarea id="task-content" placeholder="할 일에 대한 상세 내용을 입력하세요" rows="4" maxlength="500"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="task-date">일자</label>
+          <input type="date" id="task-date" required>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="cancel-btn">취소</button>
+          <button type="submit" class="btn-primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
