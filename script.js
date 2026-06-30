@@ -1,3 +1,18 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyBVY11Qp7xRUemNDGJ6DttzmNmGTUi8Ue4",
+  authDomain: "todo-21f70.firebaseapp.com",
+  databaseURL: "https://todo-21f70-default-rtdb.firebaseio.com",
+  projectId: "todo-21f70",
+  storageBucket: "todo-21f70.firebasestorage.app",
+  messagingSenderId: "1064515594353",
+  appId: "1:1064515594353:web:aba5ebe2ae6a85fcdf93d0",
+  measurementId: "G-MYQCHJK82E"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const tasksRef = database.ref('tasks');
+
 const todayLabelEl = document.getElementById('today-label');
 const todayListEl = document.getElementById('today-list');
 const allListEl = document.getElementById('all-list');
@@ -37,10 +52,30 @@ let calendarYear = new Date().getFullYear();
 let calendarMonth = new Date().getMonth();
 let selectedDayDate = null;
 
+function normalizeFirebaseTask(id, data) {
+  return {
+    id,
+    title: data.title || '',
+    content: data.discription || '',
+    date: data.date || getTodayString(),
+    done: Boolean(data.done),
+    createdAt: data.createdAt || 0,
+  };
+}
+
+function listenTasksFromFirebase() {
+  tasksRef.on('value', (snapshot) => {
+    const data = snapshot.val() || {};
+    tasks = Object.entries(data).map(([id, task]) => normalizeFirebaseTask(id, task));
+    render();
+  }, (error) => {
+    console.error('Firebase 할 일 불러오기 오류:', error);
+    alert('Firebase에서 할 일을 불러오지 못했습니다. 데이터베이스 규칙과 연결 상태를 확인해 주세요.');
+  });
+}
+
 function saveTasks() {
-  // localStorage를 사용하지 않습니다.
-  // 현재 버전은 브라우저가 열려 있는 동안에만 할 일이 유지됩니다.
-  // 추후 실제 저장이 필요하면 서버, Google Sheets, DB 등으로 연결할 수 있습니다.
+  // Firebase Realtime Database를 사용하므로 별도의 localStorage 저장은 하지 않습니다.
 }
 
 function getTodayString() {
@@ -454,49 +489,66 @@ function closeDetailModal() {
   detailDeleteBtn.disabled = false;
 }
 
-function updateTask(id, title, content, date) {
-  const task = tasks.find((t) => t.id === id);
-  if (!task) return false;
-
+async function updateTask(id, title, content, date) {
   const trimmedTitle = title.trim();
   if (!trimmedTitle) return false;
 
-  task.title = trimmedTitle;
-  task.content = content.trim();
-  task.date = date;
-  saveTasks();
-  render();
-  return true;
+  try {
+    await tasksRef.child(id).update({
+      title: trimmedTitle,
+      discription: content.trim(),
+      date,
+    });
+    return true;
+  } catch (error) {
+    console.error('Firebase 할 일 수정 오류:', error);
+    alert('할 일을 수정하지 못했습니다. Firebase 연결 상태를 확인해 주세요.');
+    return false;
+  }
 }
 
-function addTask(title, content, date) {
-  tasks.push({
-    id: crypto.randomUUID(),
-    title: title.trim(),
-    content: content.trim(),
-    date,
-    done: false,
-    createdAt: Date.now(),
-  });
-  saveTasks();
-  render();
+async function addTask(title, content, date) {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) return false;
+
+  try {
+    await tasksRef.push({
+      title: trimmedTitle,
+      discription: content.trim(),
+      date,
+      done: false,
+      createdAt: Date.now(),
+    });
+    return true;
+  } catch (error) {
+    console.error('Firebase 할 일 저장 오류:', error);
+    alert('할 일을 Firebase에 저장하지 못했습니다. 데이터베이스 규칙과 연결 상태를 확인해 주세요.');
+    return false;
+  }
 }
 
-function toggleDone(id) {
+async function toggleDone(id) {
   const task = tasks.find((t) => t.id === id);
   if (!task) return;
-  task.done = !task.done;
-  saveTasks();
-  render();
+
+  try {
+    await tasksRef.child(id).update({ done: !task.done });
+  } catch (error) {
+    console.error('Firebase 완료 상태 변경 오류:', error);
+    alert('완료 상태를 변경하지 못했습니다. Firebase 연결 상태를 확인해 주세요.');
+  }
 }
 
-function deleteTask(id) {
+async function deleteTask(id) {
   if (!confirm('이 할 일을 삭제할까요?')) return;
 
-  if (detailTaskId === id) closeDetailModal();
-  tasks = tasks.filter((t) => t.id !== id);
-  saveTasks();
-  render();
+  try {
+    if (detailTaskId === id) closeDetailModal();
+    await tasksRef.child(id).remove();
+  } catch (error) {
+    console.error('Firebase 할 일 삭제 오류:', error);
+    alert('할 일을 삭제하지 못했습니다. Firebase 연결 상태를 확인해 주세요.');
+  }
 }
 
 document.getElementById('add-btn').addEventListener('click', openModal);
@@ -526,7 +578,7 @@ document.getElementById('next-month').addEventListener('click', () => {
   renderCalendar();
 });
 
-detailEditBtn.addEventListener('click', () => {
+detailEditBtn.addEventListener('click', async () => {
   if (!detailTaskId) return;
 
   if (!detailIsEditing) {
@@ -534,7 +586,7 @@ detailEditBtn.addEventListener('click', () => {
     return;
   }
 
-  const saved = updateTask(
+  const saved = await updateTask(
     detailTaskId,
     detailTitleEl.value,
     detailContentEl.value,
@@ -590,14 +642,14 @@ document.addEventListener('keydown', (e) => {
   if (!dayListOverlayEl.classList.contains('hidden')) closeDayListModal();
 });
 
-taskFormEl.addEventListener('submit', (e) => {
+taskFormEl.addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = taskTitleEl.value.trim();
   if (!title) return;
 
-  addTask(title, taskContentEl.value, taskDateEl.value);
-  closeModal();
+  const saved = await addTask(title, taskContentEl.value, taskDateEl.value);
+  if (saved) closeModal();
 });
 
 updateHeader();
-render();
+listenTasksFromFirebase();
